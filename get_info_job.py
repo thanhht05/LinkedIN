@@ -14,6 +14,8 @@ def check_type(url):
 def get_query_id(cookie: str, url):
     headers = get_header(cookie, url)
     html = requests.get(url, headers=headers).text
+    with open("output.txt", "w", encoding="utf-8") as f:
+        f.write(html)
 
     type_url = check_type(url)
     match = None
@@ -59,14 +61,14 @@ def get_target_id(cookie: str, slug: str, url):
     return False
 
 
-def get_slug(url):
-    type_url = check_type(url)
-    match = None
-    if type_url == "COMPANY":
-        match = re.search(r"linkedin\.com/company/([a-z0-9-]+)", url)
-    elif type_url == "PROFILE":
-        match = re.search(r"linkedin\.com/in/([a-z0-9-]+)", url)
+# def get_slug(url):
+#     type_url = check_type(url)
+#     match = None
+#     if type_url == "COMPANY":
+#         match = re.search(r"linkedin\.com/company/([a-z0-9-]+)", url)
+#     elif type_url == "PROFILE":
+#         match = re.search(r"linkedin\.com/in/([a-z0-9-]+)", url)
 
-    if match:
-        return match.group(1)
-    return None
+#     if match:
+#         return match.group(1)
+#     return None

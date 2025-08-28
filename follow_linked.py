@@ -4,13 +4,13 @@ import time
 from curl_cffi import requests
 from color import RED, YELLOW, GREEN, RESET
 import re
-from get_info_job import get_target_id, get_slug, check_type
+from get_info_job import get_target_id, check_type
 from headers import get_header
 
 
 def click_follow(cookie: str, job_data):
     headers = get_header(cookie, job_data["link"])
-    company_slug = get_slug(job_data["link"])
+    company_slug = job_data["object_id"]
 
     target_id = get_target_id(cookie, company_slug, job_data["link"])
 
