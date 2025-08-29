@@ -1,38 +1,46 @@
 import re
 import requests
 from headers import get_header
+from get_info_job import check_type, get_query_id
 
 
-def check_type(url):
-    if "linkedin.com/company/" in url:
-        return "COMPANY"
-    elif "linkedin.com/in/" in url:
-        return "PROFILE"
-    return None
-
-
-def get_query_id(cookie: str, url):
-    headers = get_header(cookie, url)
-    html = requests.get(url, headers=headers).text
-    with open("output.txt", "w", encoding="utf-8") as f:
-        f.write(html)
-
+def get_target_id(cookie: str, slug: str, url):
     type_url = check_type(url)
-    match = None
+    query_id = get_query_id(cookie, url)
+    if not query_id:
+        return False
+
+    headers = get_header(cookie, url)
 
     if type_url == "COMPANY":
-        match = re.search(r"voyagerOrganizationDashCompanies\.[a-f0-9]+", html)
+        response = requests.get(
+            f"https://www.linkedin.com/voyager/api/graphql?includeWebMetadata=true&variables=(universalName:{slug})&queryId={query_id}",
+            headers=headers,
+        )
+        matches = re.findall(r"fsd_company:(\d+)", response.text)
+        if matches:
+            return matches[0]
+
     elif type_url == "PROFILE":
-        match = re.search(r"voyagerIdentityDashProfiles\.[a-f0-9]+", html)
+        response = requests.get(
+            f"https://www.linkedin.com/voyager/api/graphql?includeWebMetadata=true&variables=(vanityName:{slug})&queryId={query_id}",
+            headers=headers,
+        )
+        with open("output.txt", "w", encoding="utf-8") as f:
+            f.write(response.text)
 
-    if match:
-        return match.group(0)
-    return None
+        matches = re.findall(
+            r"fsd_profile:([^]]+)", response.text
+        )  # thêm dấu - nếu cần
+        if matches:
+            return matches[0]
+
+    return False
 
 
-cookie = 'lms_ads=AQHf4fJNYdGBmwAAAZjpVGU4XdUgUu8sOg9Lw1v-ejf8e-wNnJwp9sHEdQZuaXxzawVZuf9qA71H9u3EZKM3dxzl87XojbZ7;_guid=3a1c3758-9502-44e6-90ad-872df1bfb750;li_theme_set=app;bcookie="v=2&1f486571-bb5c-4853-8dee-ae2236f31af0";__cf_bm=0M_IZK1LFdvMIVCqy1ucYmIUtoJRa6xijZiSdrGNvE4-1756358680-1.0.1.1-Yx5dUAU6tqorJJC9LKRrF7wQIBg01rB6QqNXTE73OgMY2opgOkOe8YX8X1OHzt9Uxisy0lsluO4ZjkmjzCcwczvAZpWj.nD78J_Q6jRAiRE;_gcl_au=1.1.1039331792.1756000425.9343464.1756286035.1756286034;bitmovin_analytics_uuid=70e17664-3618-4bb8-aaf8-2c593168684b;lms_analytics=AQHf4fJNYdGBmwAAAZjpVGU4XdUgUu8sOg9Lw1v-ejf8e-wNnJwp9sHEdQZuaXxzawVZuf9qA71H9u3EZKM3dxzl87XojbZ7;AMCVS_14215E3D5995C57C0A495C55%40AdobeOrg=1;fptctx2=taBcrIH61PuCVH7eNCyH0I1otfYAPn9VOPY9aMX8tO1bhLtw1gQK9xHJJhl%252bqMZ%252bcSypoBH9jiFLRHSLApZiIl3k6iThlZdQ5GXm7ZDrO8he%252fx7m36rHdnoNBiYChmdlR7RJP8SQ2DE0IpSmhgqsdBo0jm5Al1oZsRV47tP31CVZjRBvHpUg3Ko%252fnBRE4IJTPpObFakoIjwcFDa9c3PcAzRiJTrpvs5f%252bQicKQd50Hsr6f%252fM8IZIH0iOt2TcUNPCEwy8zKBK6XGhArozx0Im8yjp0aT2uEiN0QXqS7OzgCKVgZz1GWdP7QOAx4zuCnNpHgt2y771qQGhkDS1BoV%252brMys7%252f%252fFFh9bP80s2yLguZLKNLy10mPTftPfAvqXYy5P2vxIbq%252fIqvrH2EHCcovGyg%253d%253d;li_at=AQEDAUf9ZWACn3s8AAABlP-uFD0AAAGZCAw4iE4AP-PJ43Xn9PW8lJL2E8cJI_EFtAUPRoLuG9mIT6SJCxp5zo1uR07dIIl95Y3z6vL8wYjZYsclf7GK2j-NfSefN6cIivpclrqM4zhBW0ICoe-I_LWq;lang=v=2&lang=en-us;lidc="b=OB96:s=O:r=O:a=O:p=O:g=3816:u=55:x=1:i=1756358948:t=1756437702:v=2:sig=AQHqJCsnF_kwlxlUbY7rtDa02coWXoRy";aam_uuid=06176110973161480230860678494130966861;AMCV_14215E3D5995C57C0A495C55%40AdobeOrg=-637568504%7CMCIDTS%7C20328%7CMCMID%7C06026700597502077400810245217340646022%7CMCAAMLH-1756962667%7C3%7CMCAAMB-1756962667%7CRKhpRz8krg2tLO6pguXWp5olkAcUniQYPHaMWWgdJ3xzPWQmdj0y%7CMCOPTOUT-1756365067s%7CNONE%7CMCCIDH%7C-1845589424%7CvVersion%7C5.1.1;AnalyticsSyncHistory=AQI4-l8Rx8DbLQAAAZjpVGRIAcrEIYqSlyJaxJd-hsakUpWv03WWzUoZiCbgzMaqiO7bn2JPx8-TwFvPc2U90w;bscookie="v=1&20250209062556bcb96a5f-b68a-4988-8c48-7c7de9c5abd0AQHj3_28HKyPApTj89XIlYER2ktllwTw";dfpfpt=9f2313db6b3543f8922b7b4bb9173160;JSESSIONID="ajax:4248487920917906119";li_rm=AQFB-AqJ3YVdLwAAAZT_rfGH7a-XPJuy4pibkcbxXwPog2dnsK0p0Qpuwt5nXizJGP3CxGthfXTskHeIhsVgOTIql_p-7JNxDoI6b9sc1iLBeO4ICxilZGIt;li_sugr=ccd9e700-016a-45eb-ab27-761e0c215d4a;li_theme=light;li_theme_set=app;liap=true;timezone=Asia/Bangkok;UserMatchHistory=AQKXjpgZDjMOGQAAAZjvJrQDDfhBuBBi8sRhdc20UqByi6M0Mq-0DB-XQDRu2tULx6bfPaSDElRXyK_RV8Q859iaNtUFCx7skZ0nKfg0pcOFR3-s3qCzwQ175xFjqaUVb_7mZWINUWfYi3xmJXb847XmaIpBV2TicUP-xLp2OvckqPz3ruGhGy3i2Xlfrm5x90xQliSgIAvroYsW438vEbpn-0qSEHFKlZgHhWDnypHj3LgOLsBKIPq7eyEnq5OTwhrAOA0f7ZAjRFQGGDJSevyZUdgnv3UakvOq4GSY6u08SiEytuFGqKP3emHQ3iVq_0OfQs9oUhUhS4h40WBH99ePZF-i75VSKTBJXC2S8rKWnwGnzQ'
-url = "https://www.linkedin.com/company/fivi-agency/"
+cookie = 'lms_ads=AQHtJW9t--tQ0AAAAZjvMuXIh10yIiOsIx3R4Th2BJFyNsk6qLxBh2fhIc7ONgIcL7BDaja-BKsHl0k6iN2JDQ0ZI0I4-4RV;_guid=9bba59e0-06cb-44c8-8989-750e0f8d18b4;bcookie="v=2&ec2fdc03-442b-4409-88e4-fe2280c77908";__cf_bm=6dpkJLHMSJlEB5EM1FAQv8JYLmFf3DYQ4EwPzwU0pLo-1756437988-1.0.1.1-bEJF4ZvxRZ1fya02I1vwv.0lwtjfsMdahFtcG2FisXk_9baPFi9DS9JpoPzawx3vkGknm_0PlMeONM4yVHiCC6S4X_BavIeoytrvvFuzuYs;_gcl_au=1.1.974568131.1756359751;g_state={"i_l":0};lms_analytics=AQHtJW9t--tQ0AAAAZjvMuXIh10yIiOsIx3R4Th2BJFyNsk6qLxBh2fhIc7ONgIcL7BDaja-BKsHl0k6iN2JDQ0ZI0I4-4RV;AMCVS_14215E3D5995C57C0A495C55%40AdobeOrg=1;fptctx2=taBcrIH61PuCVH7eNCyH0LNKRXFdWqLJ6b8ywJyet7UtulUkUoP92bPVN3ws6Yo4lis26nXYyOqloaLLTi6hH6v1RQSSZiFOSTPYnu53v6VW%252bAd%252bjehsX%252b6qocfC%252fb2MXd11OYIvjBjJLevuTUMoNS00hXE7BIWjQMmB8En6bmsjNhLfsFcIGV18j8%252bCaL9N5MkiXJHhkLqXhJIcFzjWYm1%252f%252fp4RIg0eoJtVg1OxP7jqHYzPapH8Ua4I8ZdTYuVG%252fHsy1%252b8ew6d7UNtZzwMvLne5jDWnEzGUVhSlgcLyVmWxL6sJAv8KarqICWG8s7TRSsQ5xqLjddMFQvjwRT2d1v6HkKQf3qPwzUdYXyB7WkwM8CCiaUmaFkdmieTI4wag0RG4HyHC4Xau80KMa9xaDw%253d%253d;li_at=AQEDAUf9ZWADsiAjAAABmO8y0joAAAGZEz9WOk0AJbc8rF-d7cG6K2HHD5uEByrfq73OHpbPbdqo5ie7wUrrBxYDvjIquT8U3s_kT-fmT0Z2LdIzV3BrcA4neeH9FePZTVVt3R2o9bCnxrQ_foH4Yvil;lang=v=2&lang=en-us;lidc="b=OB96:s=O:r=O:a=O:p=O:g=3818:u=57:x=1:i=1756438159:t=1756522977:v=2:sig=AQH4bqdzUIg_ZtHYxXgwkz0_twH2oiFl";aam_uuid=06176110973161480230860678494130966861;AMCV_14215E3D5995C57C0A495C55%40AdobeOrg=-637568504%7CMCIDTS%7C20329%7CMCMID%7C06026700597502077400810245217340646022%7CMCAAMLH-1757037827%7C3%7CMCAAMB-1757037827%7CRKhpRz8krg2tLO6pguXWp5olkAcUniQYPHaMWWgdJ3xzPWQmdj0y%7CMCOPTOUT-1756440227s%7CNONE%7CvVersion%7C5.1.1%7CMCCIDH%7C-1845589424;AnalyticsSyncHistory=AQJvbq-Q4AEVSwAAAZjvMuQ8eIBxp0wZeWC_xumiIAkrfeptIcHSd3TuehBnQiPRqqiTG3zihhSQF-QDLIeusQ;bscookie="v=1&2025082805421287b76e56-449f-4d31-8488-d719f84c2fb0AQFifnzubDdYDZkFG1FApClYgzKwr1y6";dfpfpt=13b8353c7ad04fffa325a72a08f85b3b;JSESSIONID="ajax:0124919465924536625";li_rm=AQFBA5n2RM_C1QAAAZjvMrNwCnzL4ghposhb5HXOxNHycQMrnjObigaint7S3pP2ZGNRWvIWq1_ExnCxG-gBMBzeSRXTiIcBNmf3ylHD1UEKx7GLUr8KBhd_;li_sugr=364f0d68-561b-4eaa-aced-3b747e4dcc2d;li_theme=light;li_theme_set=app;liap=true;timezone=Asia/Bangkok;UserMatchHistory=AQKCJ6FDRptsEAAAAZjz31wgZIozzkggSreVA9WJqhglZzMxxVatQ0EYBrV8d3vfqZgjcAR-Hewr9M-aToggbHLXAl73HWCMeOgcHWbqdXq4ZW3EvL_dGnucgzhn7E9VTZ_XubyQQH7Er_d-qDHktn06ETx4gS1lG7px345YrOf0uPuAf27Po11gkgzFUbQHaCyDt38qgjId6OcrS3pdqJ7rBabPoz3Wvk_hSVY4kKH54bxfM58yi8AW3RvMBYcrFuOK9CGNXm5HM3qSizIAxrI1rHPEsQ0R7HmHGie7WfqnfZIB4DdlalAO-vhkIuFi7wmHfhoCrWikC20K8aVZkjz07heNR4d0dC-ljcwvJ-D89VzfKw'
 
-
-qi = get_query_id(cookie, url)
-print(qi)
+url = "https://www.linkedin.com/in/jiya-tomar-538b21235/"
+slug = "jiya-tomar-538b21235"
+a = get_target_id(cookie, slug, url)
+print(a)

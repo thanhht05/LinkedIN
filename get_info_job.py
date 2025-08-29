@@ -54,7 +54,7 @@ def get_target_id(cookie: str, slug: str, url):
             headers=headers,
         )
         matches = re.findall(
-            r"fsd_profile:[a-zA-Z0-9.-]+", response.text
+            r"fsd_profile:([^]]+)", response.text
         )  # thêm dấu - nếu cần
         if matches:
             return matches[0]
