@@ -8,7 +8,8 @@ def check_type(url):
         return "COMPANY"
     elif "linkedin.com/in/" in url:
         return "PROFILE"
-    return None
+    elif "linkedin.com/posts" in url:
+        return "POST"
 
 
 def get_query_id(cookie: str, url):

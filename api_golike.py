@@ -30,7 +30,7 @@ def skip_job(job_data):
     }
 
     response = requests.post(
-        "https://gateway.golike.net/api/advertising/publishers/instagram/skip-jobs",
+        "https://gateway.golike.net/api/advertising/publishers/linkedin/skip-jobs",
         headers=headers,
         json=json_data,
         impersonate="safari_ios",

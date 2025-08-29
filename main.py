@@ -4,6 +4,8 @@ from Linked_job import get_latest_job
 from api_golike import complete_job, skip_job
 from config import ACCOUNT_ID
 from color import GREEN, RESET, RED, BLUE, YELLOW
+from get_info_job import check_type
+from like_linkedIn import safe_like
 
 
 def main():
@@ -20,7 +22,13 @@ def main():
             time.sleep(5)
             continue
 
-        success = click_follow(cookie, job_data)
+        if (
+            check_type(job_data["link"]) == "COMPANY"
+            or check_type(job_data["link"]) == "PROFILE"
+        ):
+            success = click_follow(cookie, job_data)
+        else:
+            success = safe_like(cookie, job_data)
 
         if success:
             if complete_job(job_data):
