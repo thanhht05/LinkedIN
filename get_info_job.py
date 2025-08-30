@@ -15,7 +15,7 @@ def check_type(url):
 def get_query_id(cookie: str, url):
     headers = get_header(cookie, url)
     html = requests.get(url, headers=headers).text
-    with open("output.txt", "w", encoding="utf-8") as f:
+    with open("output.html", "w", encoding="utf-8") as f:
         f.write(html)
 
     type_url = check_type(url)
@@ -38,13 +38,14 @@ def get_target_id(cookie: str, slug: str, url):
         return False
 
     headers = get_header(cookie, url)
-
+    with open("output.html", "r", encoding="utf-8") as f:
+        data = f.read()
     if type_url == "COMPANY":
         response = requests.get(
             f"https://www.linkedin.com/voyager/api/graphql?includeWebMetadata=true&variables=(universalName:{slug})&queryId={query_id}",
             headers=headers,
         )
-        matches = re.findall(r"fsd_company:(\d+)", response.text)
+        matches = re.findall(r"fsd_company:(\d+)", data)
         if matches:
             return matches[0]
 
@@ -53,23 +54,11 @@ def get_target_id(cookie: str, slug: str, url):
             f"https://www.linkedin.com/voyager/api/graphql?includeWebMetadata=true&variables=(vanityName:{slug})&queryId={query_id}",
             headers=headers,
         )
+
         matches = re.findall(
-            r"fsd_profile:([^]]+)", response.text
-        )  # thêm dấu - nếu cần
+            r"targetInviteeResolutionResult&quot;:&quot;urn:li:([^&]+)", data
+        )
         if matches:
-            return matches[0]
+            return matches[0].split(":")[1]
 
     return False
-
-
-# def get_slug(url):
-#     type_url = check_type(url)
-#     match = None
-#     if type_url == "COMPANY":
-#         match = re.search(r"linkedin\.com/company/([a-z0-9-]+)", url)
-#     elif type_url == "PROFILE":
-#         match = re.search(r"linkedin\.com/in/([a-z0-9-]+)", url)
-
-#     if match:
-#         return match.group(1)
-#     return None

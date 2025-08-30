@@ -11,7 +11,6 @@ from headers import get_header
 def click_follow(cookie: str, job_data):
     headers = get_header(cookie, job_data["link"])
     company_slug = job_data["object_id"]
-
     target_id = get_target_id(cookie, company_slug, job_data["link"])
 
     json_data = {
@@ -27,14 +26,16 @@ def click_follow(cookie: str, job_data):
         time.sleep(1)
 
     if check_type(job_data["link"]) == "COMPANY":
+
         response = requests.post(
             f"https://www.linkedin.com/voyager/api/feed/dash/followingStates/urn:li:fsd_followingState:urn:li:fsd_company:{target_id}",
             headers=headers,
             json=json_data,
         )
     elif check_type(job_data["link"]) == "PROFILE":
+
         response = requests.post(
-            f"https://www.linkedin.com/voyager/api/feed/dash/followingStates/urn:li:fsd_followingState:urn:li:{target_id}",
+            f"https://www.linkedin.com/voyager/api/feed/dash/followingStates/urn:li:fsd_followingState:urn:li:fsd_profile:{target_id}",
             headers=headers,
             json=json_data,
         )
