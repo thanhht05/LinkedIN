@@ -4,6 +4,15 @@ import requests
 from headers import get_header
 
 
+def save_file(cookie: str, url):
+    headers = get_header(cookie, url)
+    html = requests.get(url, headers=headers).text
+    file_name = "like.html"
+    with open(file_name, "w", encoding="utf-8") as f:
+        f.write(html)
+    return file_name
+
+
 def extract_ids_from_file(path="like.html"):
     """Trả về dict chỉ chứa activity[0] và ugcPost[0] từ file"""
     with open(path, "r", encoding="utf-8") as f:
@@ -37,7 +46,6 @@ def like(cookie, arg, link, data_file="like.html"):
             "threadUrn": f"urn:li:{arg}:{object_id}",
         },
         "queryId": "voyagerSocialDashReactions.b731222600772fd42464c0fe19bd722b",
-        "includeWebMetadata": True,
     }
 
     response = requests.post(
@@ -63,7 +71,8 @@ def like(cookie, arg, link, data_file="like.html"):
     return True
 
 
-def safe_like(cookie, job_data, data_file="like.html"):
+def safe_like(cookie, job_data):
+    data_file = save_file(cookie, job_data["link"])
     print("⏳ Sau 5s sẽ like...")
     for _ in range(5):
         print(".", end="", flush=True)

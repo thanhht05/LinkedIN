@@ -20,7 +20,6 @@ def get_header(cookie: str, url):
         "sec-fetch-dest": "empty",
         "sec-fetch-mode": "cors",
         "sec-fetch-site": "same-origin",
-        # "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36",
         "user-agent": ua,
         "x-li-lang": "en_US",
         "x-li-page-instance": "urn:li:page:d_flagship3_company;JsS+biQ4T6ewjQ+LaBQYOQ==",
